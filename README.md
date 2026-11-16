@@ -1,41 +1,23 @@
-# Component Name
+# Apache Spark
 
-Component description.
+Apache Spark is a SigmaOS component providing a functional domain model for `apache-spark` with validated state, deterministic storage, and typed errors.
 
-## Overview
+## Description
 
-This component provides functionality for SigmaOS.
+Apache Spark big data processing compatibility layer for SigmaOS
 
-## Features
+## Domain model
 
-- Feature 1
-- Feature 2
+- `BigData` — domain entity
 
-## Usage
+## API
 
-```rust
-use sigmaos_component::Component;
-
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let mut component = Component::new()?;
-    component.init().await?;
-    Ok(())
-}
-```
-
-## Building
-
-```bash
-cargo build --release
-```
+- `new()`
 
 ## Testing
 
-```bash
+```sh
 cargo test
 ```
 
-## License
-
-MIT License - see LICENSE file for details
+Tests are deterministic, isolated, and self-validating.
