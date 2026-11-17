@@ -3,7 +3,7 @@ name = "SigmaOS-apache-spark"
 tier = 2
 stability = "scaffold"
 language = "rust"
-description = "apache-spark component"
+description = "Apache Spark big data processing compatibility layer for SigmaOS"
 upstream = []
 
 [contract]
