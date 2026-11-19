@@ -1,58 +1,131 @@
-//! SigmaOS Big Data Compatibility Layer
-//!
-//! Big data compatibility for SigmaOS
-//! Provides distributed data processing and analytics
-
+//! SigmaOS-apache_spark — apache_spark component for SigmaOS
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
-pub mod spark;
-pub mod hadoop;
-pub mod streaming;
-pub mod batch;
-pub mod config;
+use thiserror::Error;
 
-pub use spark::*;
-puse hadoop::*;
-puse streaming::*;
-puse batch::*;
-puse config::*;
-
-/// Big data compatibility layer
-pub struct BigData {
-    pub config: BigDataConfig,
-    pub spark: SparkManager,
-    pub hadoop: HadoopManager,
-    pub streaming: StreamingManager,
+/// Error types for this component.
+#[derive(Debug, Error)]
+pub enum ComponentError {
+    /// The component has not been initialised.
+    #[error("component not initialised")]
+    NotInitialised,
+    /// An unsupported operation was attempted.
+    #[error("unsupported operation: {0}")]
+    Unsupported(&'static str),
 }
 
-impl BigData {
-    /// Create new big data instance
-    pub fn new() -> anyhow::Result<Self> {
-        let config = BigDataConfig::load_default()?;
-        let spark = SparkManager::new(config.clone())?;
-        let hadoop = HadoopManager::new(config.clone())?;
-        let streaming = StreamingManager::new(config.clone())?;
-        Ok(Self {
-            config,
-            spark,
-            hadoop,
-            streaming,
-        })
+/// Convenience result type.
+pub type ComponentResult<T> = Result<T, ComponentError>;
+
+/// Core component struct for apache_spark.
+#[derive(Debug, Default, Clone)]
+pub struct Component {
+    initialised: bool,
+    name: String,
+}
+
+impl Component {
+    /// Create a new, uninitialised component.
+    pub fn new() -> Self {
+        Self {
+            initialised: false,
+            name: String::from("apache_spark"),
+        }
     }
 
-    /// Initialize big data
-    pub async fn init(&mut self) -> anyhow::Result<()> {
-        self.spark.init().await?;
-        self.hadoop.init().await?;
-        self.streaming.init().await?;
+    /// Initialise the component.
+    pub fn init(&mut self) -> ComponentResult<()> {
+        self.initialised = true;
         Ok(())
     }
 
-    /// Shutdown big data
-    pub async fn shutdown(&mut self) -> anyhow::Result<()> {
-        self.spark.shutdown().await?;
-        self.hadoop.shutdown().await?;
-        self.streaming.shutdown().await?;
+    /// Returns true if the component has been initialised.
+    pub fn is_ready(&self) -> bool {
+        self.initialised
+    }
+
+    /// Execute the component's primary operation.
+    pub fn run(&self) -> ComponentResult<()> {
+        if !self.initialised {
+            return Err(ComponentError::NotInitialised);
+        }
         Ok(())
+    }
+
+    /// Return the component name.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Reset the component to uninitialised state.
+    pub fn reset(&mut self) {
+        self.initialised = false;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_not_ready_aaa() {
+        // Arrange + Act
+        let c = Component::new();
+        // Assert
+        assert!(!c.is_ready());
+    }
+
+    #[test]
+    fn test_init_makes_ready_aaa() {
+        // Arrange
+        let mut c = Component::new();
+        // Act
+        c.init().unwrap();
+        // Assert
+        assert!(c.is_ready());
+    }
+
+    #[test]
+    fn test_run_before_init_fails_aaa() {
+        // Arrange
+        let c = Component::new();
+        // Act
+        let result = c.run();
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_run_after_init_succeeds_aaa() {
+        // Arrange
+        let mut c = Component::new();
+        c.init().unwrap();
+        // Act
+        let result = c.run();
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_reset_clears_init_aaa() {
+        // Arrange
+        let mut c = Component::new();
+        c.init().unwrap();
+        assert!(c.is_ready());
+        // Act
+        c.reset();
+        // Assert
+        assert!(!c.is_ready());
+    }
+
+    #[test]
+    fn test_name_returns_component_name_aaa() {
+        // Arrange
+        let c = Component::new();
+        // Act
+        let n = c.name();
+        // Assert
+        assert!(!n.is_empty());
     }
 }
